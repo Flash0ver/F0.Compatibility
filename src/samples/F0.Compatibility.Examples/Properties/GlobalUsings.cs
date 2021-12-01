@@ -1,1 +1,1 @@
-global using global::System.Runtime.CompilerServices;
+global using static global::System.Console;

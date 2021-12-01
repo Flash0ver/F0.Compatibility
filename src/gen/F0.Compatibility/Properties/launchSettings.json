@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "F0.Compatibility": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\..\\samples\\F0.Compatibility.Examples\\F0.Compatibility.Examples.csproj"
+    }
+  }
+}
