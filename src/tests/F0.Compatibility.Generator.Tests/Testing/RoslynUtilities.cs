@@ -12,10 +12,10 @@ namespace F0.Tests.Testing;
 
 internal static class RoslynUtilities
 {
-	internal static void TestGenerator<TGenerator>(string inputSource)
+	internal static void TestGenerator<TGenerator>(string inputSource, LanguageVersion langVersion = LanguageVersion.Default)
 		where TGenerator : IIncrementalGenerator, new()
 	{
-		Compilation compilation = RunGenerator<TGenerator>(inputSource, 1);
+		Compilation compilation = RunGenerator<TGenerator>(inputSource, 1, langVersion);
 
 		SyntaxTree generated = compilation.SyntaxTrees.Last();
 		string actualSource = generated.ToString();
@@ -27,10 +27,10 @@ internal static class RoslynUtilities
 		}
 	}
 
-	internal static void TestGenerator<TGenerator>(string inputSource, string expectedSource)
+	internal static void TestGenerator<TGenerator>(string inputSource, string expectedSource, LanguageVersion langVersion = LanguageVersion.Default)
 		where TGenerator : IIncrementalGenerator, new()
 	{
-		Compilation compilation = RunGenerator<TGenerator>(inputSource, 2);
+		Compilation compilation = RunGenerator<TGenerator>(inputSource, 2, langVersion);
 
 		SyntaxTree generated = compilation.SyntaxTrees.Last();
 		string actualSource = generated.ToString();
@@ -43,18 +43,19 @@ internal static class RoslynUtilities
 		}
 	}
 
-	private static Compilation RunGenerator<TGenerator>(string inputSource, int expectedSyntaxTreeCount)
+	private static Compilation RunGenerator<TGenerator>(string inputSource, int expectedSyntaxTreeCount, LanguageVersion langVersion)
 		where TGenerator : IIncrementalGenerator, new()
 	{
 		Debug.Assert(expectedSyntaxTreeCount >= 1);
 		int generatedSource = expectedSyntaxTreeCount - 1;
 
-		var generator = new TGenerator();
+		IIncrementalGenerator generator = new TGenerator();
+		ISourceGenerator[] generators = { generator.AsSourceGenerator() };
 
-		GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+		CSharpParseOptions? parseOptions = langVersion == LanguageVersion.Default ? null : new CSharpParseOptions(langVersion);
 
-		Compilation inputCompilation = CreateCompilation(inputSource);
-
+		GeneratorDriver driver = CSharpGeneratorDriver.Create(generators, null, parseOptions, null, default);
+		Compilation inputCompilation = CreateCompilation(inputSource, parseOptions);
 		driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out Compilation outputCompilation, out ImmutableArray<Diagnostic> diagnostics, CancellationToken.None);
 
 		Assert.True(diagnostics.IsEmpty, $"Source generation failed with {diagnostics.Length} diagnostics: {FormatDiagnostics(diagnostics)}");
@@ -74,9 +75,9 @@ internal static class RoslynUtilities
 		return outputCompilation;
 	}
 
-	private static Compilation CreateCompilation(string source)
+	private static Compilation CreateCompilation(string source, CSharpParseOptions? options)
 		=> CSharpCompilation.Create("compilation",
-			new[] { CSharpSyntaxTree.ParseText(source) },
+			new[] { CSharpSyntaxTree.ParseText(source, options) },
 			new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
 			new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 

@@ -5,6 +5,9 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>F0.Compatibility.Examples</AssemblyName>
     <RootNamespace>F0.Examples</RootNamespace>
+    <LangVersion>default</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
 
   <PropertyGroup>

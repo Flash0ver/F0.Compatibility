@@ -1,3 +1,5 @@
+using System;
+
 namespace F0.Examples;
 
 internal static class Program
