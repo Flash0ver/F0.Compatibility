@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <F0Version>0.1.0</F0Version>
-    <F0PackageReleaseNotes>vNext.</F0PackageReleaseNotes>
+    <F0PackageReleaseNotes>Initial version, generating IsExternalInit class if required for init-only setters (C# 9.0).</F0PackageReleaseNotes>
   </PropertyGroup>
 
 </Project>
