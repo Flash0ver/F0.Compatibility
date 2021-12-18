@@ -49,6 +49,50 @@ public record struct ValueType(string InitOnlySetter);
 		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code);
 	}
 
+	[Fact]
+	public void TypeAlreadyDefined_Compile_DoNotGenerateType()
+	{
+		const string code = @"
+public record Record(string InitOnlySetter);
+
+namespace System.Runtime.CompilerServices
+{
+	internal static class IsExternalInit
+	{
+	}
+}
+";
+
+		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code);
+	}
+
+	[Fact]
+	public void TypeNotYetImplemented_Compile_GenerateType()
+	{
+		const string code = @"
+public record Record(string InitOnlySetter);
+
+namespace System.Runtime.Namespace
+{
+	internal static class IsExternalInit
+	{
+	}
+}
+namespace System.Runtime.CompilerServices
+{
+	internal static class ExternalInit
+	{
+	}
+}
+";
+
+#if HAS_SYSTEM_RUNTIME_COMPILERSERVICES_ISEXTERNALINIT
+		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code);
+#else
+		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code, GetGenerated());
+#endif
+	}
+
 	private static TheoryData<string, LanguageVersion> InitOnlySetter_TheoryData()
 	{
 		TheoryData<string, LanguageVersion> data = new();
