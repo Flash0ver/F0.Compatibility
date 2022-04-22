@@ -1,23 +1,25 @@
 using F0.CodeAnalysis;
 using F0.Tests.Testing;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Testing;
 
 namespace F0.Tests.CodeAnalysis;
 
 public class IsExternalInitGeneratorTests
 {
+	private static readonly ReferenceAssemblies withoutIsExternalInit = ReferenceAssemblies.NetCore.NetCoreApp31;
+	private static readonly ReferenceAssemblies withIsExternalInit = ReferenceAssemblies.Net.Net50;
+
 	[Theory]
 	[MemberData(nameof(InitOnlySetter_TheoryData))]
-	public void SingleInitOnlySetter_Compile_GenerateType(string code, LanguageVersion langVersion) =>
-#if HAS_SYSTEM_RUNTIME_COMPILERSERVICES_ISEXTERNALINIT
-		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code, langVersion);
-#else
-		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code, GetGenerated(langVersion), langVersion);
-#endif
-
+	public async Task SingleInitOnlySetter_Compile_GenerateType(string code, LanguageVersion langVersion)
+	{
+		await VerifyAsync(code, withIsExternalInit, langVersion);
+		await VerifyAsync(code, GetGenerated(langVersion), withoutIsExternalInit, langVersion);
+	}
 
 	[Fact]
-	public void MultipleInitOnlySetter_Compile_GenerateType()
+	public async Task MultipleInitOnlySetter_Compile_GenerateType()
 	{
 		const string code = @"
 public class Class { public string InitOnlySetter { get; init; } }
@@ -28,15 +30,12 @@ public record class ReferenceType(string InitOnlySetter);
 public readonly record struct ValueType(string InitOnlySetter);
 ";
 
-#if HAS_SYSTEM_RUNTIME_COMPILERSERVICES_ISEXTERNALINIT
-		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code);
-#else
-		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code, GetGenerated());
-#endif
+		await VerifyAsync(code, withIsExternalInit);
+		await VerifyAsync(code, GetGenerated(), withoutIsExternalInit);
 	}
 
 	[Fact]
-	public void NoInitOnlySetter_Compile_DoNotGenerateType()
+	public async Task NoInitOnlySetter_Compile_DoNotGenerateType()
 	{
 		const string code = @"
 public class SetAccessor { public string InitOnlySetter { get; set; } }
@@ -46,11 +45,11 @@ public record class ReferenceType();
 public record struct ValueType(string InitOnlySetter);
 ";
 
-		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code);
+		await VerifyAsync(code, withoutIsExternalInit);
 	}
 
 	[Fact]
-	public void TypeAlreadyDefined_Compile_DoNotGenerateType()
+	public async Task TypeAlreadyDefined_Compile_DoNotGenerateType()
 	{
 		const string code = @"
 public record Record(string InitOnlySetter);
@@ -63,11 +62,11 @@ namespace System.Runtime.CompilerServices
 }
 ";
 
-		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code);
+		await VerifyAsync(code, withoutIsExternalInit);
 	}
 
 	[Fact]
-	public void TypeNotYetImplemented_Compile_GenerateType()
+	public async Task TypeNotYetImplemented_Compile_GenerateType()
 	{
 		const string code = @"
 public record Record(string InitOnlySetter);
@@ -86,11 +85,7 @@ namespace System.Runtime.CompilerServices
 }
 ";
 
-#if HAS_SYSTEM_RUNTIME_COMPILERSERVICES_ISEXTERNALINIT
-		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code);
-#else
-		RoslynUtilities.TestGenerator<IsExternalInitGenerator>(code, GetGenerated());
-#endif
+		await VerifyAsync(code, GetGenerated(), withoutIsExternalInit);
 	}
 
 	private static TheoryData<string, LanguageVersion> InitOnlySetter_TheoryData()
@@ -134,5 +129,16 @@ internal static class IsExternalInit
 		};
 
 		return generated;
+	}
+
+	private static Task VerifyAsync(string test, ReferenceAssemblies refAssemblies, LanguageVersion? langVersion = null)
+		=> CSharpIncrementalGeneratorVerifier<IsExternalInitGenerator>.VerifyGeneratorAsync(test, refAssemblies, langVersion);
+
+	private static Task VerifyAsync(string test, string expected, ReferenceAssemblies refAssemblies, LanguageVersion? langVersion = null)
+	{
+		string filename = "IsExternalInit.g.cs";
+		string content = expected;
+
+		return CSharpIncrementalGeneratorVerifier<IsExternalInitGenerator>.VerifyGeneratorAsync(test, (filename, content), refAssemblies, langVersion);
 	}
 }
