@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "F0.Compatibility.Analyzer.T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "perf", "perf", "{725C45D1-9DF5-49E9-8D95-4DE666DD8E7D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "F0.Compatibility.Benchmarks", "perf\F0.Compatibility.Benchmarks\F0.Compatibility.Benchmarks.csproj", "{5A8C939C-3DC1-4D32-B05D-F9019D61C720}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "F0.Compatibility.Generator.Benchmarks", "perf\F0.Compatibility.Generator.Benchmarks\F0.Compatibility.Generator.Benchmarks.csproj", "{5A8C939C-3DC1-4D32-B05D-F9019D61C720}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
