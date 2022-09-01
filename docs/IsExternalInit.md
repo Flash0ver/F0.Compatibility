@@ -10,23 +10,6 @@ Generator: [IsExternalInitGenerator](../src/gen/F0.Compatibility/CodeAnalysis/Is
 ## Summary
 Enables _C# 9.0_'s _init-only setters_ (and _positional record types_, respectively) on non-`net5.0` compatible target frameworks (i.e., target frameworks that do not define [System.Runtime.CompilerServices.IsExternalInit][system-runtime-compilerservices-isexternalinit]).
 
-## Examples
-```xml
-<Project>
-  <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net48;netstandard2.1</TargetFrameworks> <!--or less-->
-    <LangVersion>9.0</LangVersion> <!--or greater-->
-  </PropertyGroup>
-</Project>
-```
-
-```csharp
-public record Example(int Number) //record type with positional parameter
-{
-    public string Text { get; init; } //init-only setter
-}
-```
-
 ## Remarks
 The target frameworks
 - .NET Standard
@@ -43,6 +26,23 @@ when using _init-only setters_ explicitly, or implicitly via _positional paramet
 That type is available in _.NET 5_ (`net5.0`) and later.
 This generator adds the required type, if not found, to the compilation _internally_ when an `init` _accessor_ is either declared or synthesized by the compiler.
 
+## Example
+```xml
+<Project>
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net48;netstandard2.1</TargetFrameworks> <!--or less-->
+    <LangVersion>9.0</LangVersion> <!--or greater-->
+  </PropertyGroup>
+</Project>
+```
+
+```csharp
+public record Example(int Number) //record type with positional parameter
+{
+    public string Text { get; init; } //init-only setter
+}
+```
+
 ## Applies to
 | Target Framework | Versions | TFMs                      |
 | ---------------- | -------- | ------------------------- |
@@ -50,7 +50,7 @@ This generator adds the required type, if not found, to the compilation _interna
 | .NET Core        | all      | `netcoreapp3.1` or lower  |
 | .NET Framework   | all      | `net48` or lower          |
 
-## Additional resources
+## See also
 - What's new in C# 9.0
   - [Init only setters](https://docs.microsoft.com/dotnet/csharp/whats-new/csharp-9#init-only-setters)
   - [Record types](https://docs.microsoft.com/dotnet/csharp/whats-new/csharp-9#record-types)

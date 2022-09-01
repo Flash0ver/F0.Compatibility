@@ -10,20 +10,23 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace F0.CodeAnalysis;
 
-[Generator]
+[Generator(LanguageNames.CSharp)]
 internal sealed class IsExternalInitGenerator : IIncrementalGenerator
 {
 	private const string HintName = "IsExternalInit.g.cs";
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		IncrementalValuesProvider<SyntaxNode> declarations = context.SyntaxProvider.CreateSyntaxProvider(SyntaxProviderPredicate, SyntaxProviderTransform);
+		IncrementalValuesProvider<SyntaxNode> syntaxProvider = context.SyntaxProvider
+			.CreateSyntaxProvider(SyntaxProviderPredicate, SyntaxProviderTransform);
 
-		IncrementalValueProvider<(Compilation, ImmutableArray<SyntaxNode>)> tuple = context.CompilationProvider.Combine(declarations.Collect());
+		IncrementalValueProvider<(ImmutableArray<SyntaxNode> Nodes, Compilation Compilation)> withCompilation =
+			syntaxProvider.Collect().Combine(context.CompilationProvider);
 
-		IncrementalValueProvider<(ParseOptions, (Compilation, ImmutableArray<SyntaxNode>))> source = context.ParseOptionsProvider.Combine(tuple);
+		IncrementalValueProvider<((ImmutableArray<SyntaxNode> Nodes, Compilation Compilation) Other, ParseOptions ParseOptions)> source =
+			withCompilation.Combine(context.ParseOptionsProvider);
 
-		context.RegisterSourceOutput(source, SourceOutputAction);
+		context.RegisterSourceOutput(source, Execute);
 	}
 
 	private static bool SyntaxProviderPredicate(SyntaxNode syntaxNode, CancellationToken cancellationToken)
@@ -42,7 +45,7 @@ internal sealed class IsExternalInitGenerator : IIncrementalGenerator
 		{
 			if (record.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword))
 			{
-				return record.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.ReadOnlyKeyword));
+				return record.Modifiers.Any(static modifier => modifier.IsKind(SyntaxKind.ReadOnlyKeyword));
 			}
 
 			Debug.Assert(record.ClassOrStructKeyword.IsKind(SyntaxKind.ClassKeyword) || record.ClassOrStructKeyword.IsKind(SyntaxKind.None), $"Unmatched value: {record}");
@@ -57,14 +60,15 @@ internal sealed class IsExternalInitGenerator : IIncrementalGenerator
 		return context.Node;
 	}
 
-	private static void SourceOutputAction(SourceProductionContext context, (ParseOptions Options, (Compilation Compilation, ImmutableArray<SyntaxNode> Nodes) Tuple) source)
+	private static void Execute(SourceProductionContext context, ((ImmutableArray<SyntaxNode> Nodes, Compilation Compilation) Other, ParseOptions ParseOptions) source)
 	{
-		if (source.Tuple.Nodes.IsDefaultOrEmpty || HasIsExternalInit(source.Tuple.Compilation))
+		if (source.Other.Nodes.IsDefaultOrEmpty || HasIsExternalInit(source.Other.Compilation))
 		{
 			return;
 		}
 
-		if (!source.Options.TryGetCSharpLanguageVersion(out LanguageVersion langVersion))
+		if (!source.ParseOptions.TryGetCSharpLanguageVersion(out LanguageVersion langVersion)
+			|| langVersion < LanguageVersion.CSharp9)
 		{
 			return;
 		}
