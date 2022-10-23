@@ -45,7 +45,7 @@ internal sealed class IsExternalInitGenerator : IIncrementalGenerator
 		{
 			if (record.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword))
 			{
-				return record.Modifiers.Any(static modifier => modifier.IsKind(SyntaxKind.ReadOnlyKeyword));
+				return record.Modifiers.Any(SyntaxKind.ReadOnlyKeyword);
 			}
 
 			Debug.Assert(record.ClassOrStructKeyword.IsKind(SyntaxKind.ClassKeyword) || record.ClassOrStructKeyword.IsKind(SyntaxKind.None), $"Unmatched value: {record}");
