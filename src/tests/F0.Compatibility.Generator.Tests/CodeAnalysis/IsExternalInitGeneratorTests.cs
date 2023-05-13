@@ -22,14 +22,14 @@ public class IsExternalInitGeneratorTests
 	[Fact]
 	public async Task MultipleInitOnlySetter_Compile_GenerateType()
 	{
-		const string code = @"
-public class Class { public string InitOnlySetter { get; init; } }
-public struct Struct { public string InitOnlySetter { get; init; } }
-public readonly struct ReadOnlyStruct { public string InitOnlySetter { get; init; } }
-public record Record(string InitOnlySetter);
-public record class ReferenceType(string InitOnlySetter);
-public readonly record struct ValueType(string InitOnlySetter);
-";
+		const string code = """
+			public class Class { public string InitOnlySetter { get; init; } }
+			public struct Struct { public string InitOnlySetter { get; init; } }
+			public readonly struct ReadOnlyStruct { public string InitOnlySetter { get; init; } }
+			public record Record(string InitOnlySetter);
+			public record class ReferenceType(string InitOnlySetter);
+			public readonly record struct ValueType(string InitOnlySetter);
+			""";
 
 		await VerifyAsync(code, withIsExternalInit);
 		await VerifyAsync(code, GetGenerated(), withoutIsExternalInit);
@@ -38,13 +38,13 @@ public readonly record struct ValueType(string InitOnlySetter);
 	[Fact]
 	public async Task NoInitOnlySetter_Compile_DoNotGenerateType()
 	{
-		const string code = @"
-public class SetAccessor { public string InitOnlySetter { get; set; } }
-public class NoSetAccessor { public string InitOnlySetter { get; } }
-public record Record();
-public record class ReferenceType();
-public record struct ValueType(string InitOnlySetter);
-";
+		const string code = """
+			public class SetAccessor { public string InitOnlySetter { get; set; } }
+			public class NoSetAccessor { public string InitOnlySetter { get; } }
+			public record Record();
+			public record class ReferenceType();
+			public record struct ValueType(string InitOnlySetter);
+			""";
 
 		await VerifyAsync(code, withoutIsExternalInit);
 	}
@@ -52,16 +52,16 @@ public record struct ValueType(string InitOnlySetter);
 	[Fact]
 	public async Task TypeAlreadyDefined_Compile_DoNotGenerateType()
 	{
-		const string code = @"
-public record Record(string InitOnlySetter);
+		const string code = """
+			public record Record(string InitOnlySetter);
 
-namespace System.Runtime.CompilerServices
-{
-	internal static class IsExternalInit
-	{
-	}
-}
-";
+			namespace System.Runtime.CompilerServices
+			{
+				internal static class IsExternalInit
+				{
+				}
+			}
+			""";
 
 		await VerifyAsync(code, withoutIsExternalInit);
 	}
@@ -69,22 +69,22 @@ namespace System.Runtime.CompilerServices
 	[Fact]
 	public async Task TypeNotYetImplemented_Compile_GenerateType()
 	{
-		const string code = @"
-public record Record(string InitOnlySetter);
+		const string code = """
+			public record Record(string InitOnlySetter);
 
-namespace System.Runtime.Namespace
-{
-	internal static class IsExternalInit
-	{
-	}
-}
-namespace System.Runtime.CompilerServices
-{
-	internal static class ExternalInit
-	{
-	}
-}
-";
+			namespace System.Runtime.Namespace
+			{
+				internal static class IsExternalInit
+				{
+				}
+			}
+			namespace System.Runtime.CompilerServices
+			{
+				internal static class ExternalInit
+				{
+				}
+			}
+			""";
 
 		await VerifyAsync(code, GetGenerated(), withoutIsExternalInit);
 	}
@@ -92,12 +92,12 @@ namespace System.Runtime.CompilerServices
 	[Fact]
 	public async Task NotSupported_Compile_DoNotGenerateType()
 	{
-		const string code = @"
-public class Class
-{
-	public string InitOnlySetter { get; {|#0:init|}; }
-}
-";
+		const string code = """
+			public class Class
+			{
+				public string InitOnlySetter { get; {|#0:init|}; }
+			}
+			""";
 
 		DiagnosticResult[] diagnostics =
 		{
@@ -110,15 +110,16 @@ public class Class
 
 	private static TheoryData<string, LanguageVersion> InitOnlySetter_TheoryData()
 	{
-		TheoryData<string, LanguageVersion> data = new();
-		data.Add("public class Class { public string InitOnlySetter { get; init; } }", LanguageVersion.CSharp9);
-		data.Add("public struct Struct { public string InitOnlySetter { get; init; } }", LanguageVersion.CSharp9);
-		data.Add("public readonly struct ReadOnlyStruct { public string InitOnlySetter { get; init; } }", LanguageVersion.CSharp9);
+		return new()
+		{
+			{ "public class Class { public string InitOnlySetter { get; init; } }", LanguageVersion.CSharp9 },
+			{ "public struct Struct { public string InitOnlySetter { get; init; } }", LanguageVersion.CSharp9 },
+			{ "public readonly struct ReadOnlyStruct { public string InitOnlySetter { get; init; } }", LanguageVersion.CSharp9 },
 
-		data.Add("public record Record(string InitOnlySetter);", LanguageVersion.CSharp9);
-		data.Add("public record class ReferenceType(string InitOnlySetter);", LanguageVersion.CSharp10);
-		data.Add("public readonly record struct ValueType(string InitOnlySetter);", LanguageVersion.CSharp10);
-		return data;
+			{ "public record Record(string InitOnlySetter);", LanguageVersion.CSharp9 },
+			{ "public record class ReferenceType(string InitOnlySetter);", LanguageVersion.CSharp10 },
+			{ "public readonly record struct ValueType(string InitOnlySetter);", LanguageVersion.CSharp10 }
+		};
 	}
 
 	private static string GetGenerated(LanguageVersion langVersion = LanguageVersion.Latest)
@@ -126,25 +127,29 @@ public class Class
 		string generated = langVersion switch
 		{
 			<= LanguageVersion.CSharp8 => throw new ArgumentOutOfRangeException(nameof(langVersion), langVersion, $"Invalid {nameof(LanguageVersion)}."),
-			LanguageVersion.CSharp9 => @"// <auto-generated/>
-#nullable enable
+			LanguageVersion.CSharp9 => """
+				// <auto-generated/>
+				#nullable enable
 
-namespace System.Runtime.CompilerServices
-{
-	internal static class IsExternalInit
-	{
-	}
-}
-",
-			>= LanguageVersion.CSharp10 => @"// <auto-generated/>
-#nullable enable
+				namespace System.Runtime.CompilerServices
+				{
+					internal static class IsExternalInit
+					{
+					}
+				}
 
-namespace System.Runtime.CompilerServices;
+				""",
+			>= LanguageVersion.CSharp10 => """
+				// <auto-generated/>
+				#nullable enable
 
-internal static class IsExternalInit
-{
-}
-",
+				namespace System.Runtime.CompilerServices;
+
+				internal static class IsExternalInit
+				{
+				}
+
+				""",
 			_ => throw new ArgumentOutOfRangeException(nameof(langVersion), langVersion, $"Invalid {nameof(LanguageVersion)}."),
 		};
 
