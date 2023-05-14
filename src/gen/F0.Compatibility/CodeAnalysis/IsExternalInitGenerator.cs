@@ -108,6 +108,7 @@ internal sealed class IsExternalInitGenerator : IIncrementalGenerator
 			sourceText.Indent++;
 		}
 
+		sourceText.WriteLine(Source.GeneratedCodeAttribute);
 		sourceText.WriteLine("internal static class IsExternalInit");
 		sourceText.WriteLine(Tokens.OpenBrace);
 		sourceText.WriteLine(Tokens.CloseBrace);
