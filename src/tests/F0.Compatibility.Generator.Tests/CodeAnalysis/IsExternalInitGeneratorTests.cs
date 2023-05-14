@@ -108,7 +108,7 @@ public class IsExternalInitGeneratorTests
 		await VerifyAsync(code, withoutIsExternalInit, LanguageVersion.CSharp8, diagnostics);
 	}
 
-	private static TheoryData<string, LanguageVersion> InitOnlySetter_TheoryData()
+	public static TheoryData<string, LanguageVersion> InitOnlySetter_TheoryData()
 	{
 		return new()
 		{

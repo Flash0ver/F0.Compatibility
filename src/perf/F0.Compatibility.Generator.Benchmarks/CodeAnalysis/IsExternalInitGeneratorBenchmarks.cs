@@ -26,7 +26,7 @@ public class IsExternalInitGeneratorBenchmarks
 				.AppendLine($$"""public readonly record struct ValueType{{i}}(string InitOnlySetter);""");
 		}
 
-		benchmark.Initialize(code.ToString(), ReferenceAssemblies.NetCoreApp31);
+		benchmark.Initialize(code.ToString(), NetCoreApp31.References.All);
 	}
 
 	[Benchmark]
